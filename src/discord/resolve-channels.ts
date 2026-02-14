@@ -66,6 +66,11 @@ function parseDiscordChannelInput(raw: string): {
       return guild ? { guild: guild.trim(), guildOnly: true } : {};
     }
     if (guild && /^\d+$/.test(guild)) {
+      // If the channel part is also a pure numeric ID, return it as channelId
+      // so the resolver can look it up directly via the Discord API.
+      if (/^\d+$/.test(channel)) {
+        return { guildId: guild, channelId: channel };
+      }
       return { guildId: guild, channel };
     }
     return { guild, channel };
@@ -248,8 +253,11 @@ export async function resolveDiscordChannelAllowlist(params: {
         continue;
       }
       const channels = await getChannels(guild.id);
-      const matches = channels.filter(
-        (channel) => normalizeDiscordSlug(channel.name) === normalizeDiscordSlug(channelQuery),
+      const isNumericId = /^\d+$/.test(channelQuery);
+      const matches = channels.filter((channel) =>
+        isNumericId
+          ? channel.id === channelQuery
+          : normalizeDiscordSlug(channel.name) === normalizeDiscordSlug(channelQuery),
       );
       const match = preferActiveMatch(matches);
       if (match) {
