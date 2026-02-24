@@ -67,7 +67,11 @@ Save to `~/.openclaw/openclaw.json` and you can DM the bot from that number.
   // Auth profile metadata (secrets live in auth-profiles.json)
   auth: {
     profiles: {
-      "anthropic:me@example.com": { provider: "anthropic", mode: "oauth", email: "me@example.com" },
+      "anthropic:me@example.com": {
+        provider: "anthropic",
+        mode: "oauth",
+        email: "me@example.com",
+      },
       "anthropic:work": { provider: "anthropic", mode: "api_key" },
       "openai:default": { provider: "openai", mode: "api_key" },
       "openai-codex:default": { provider: "openai-codex", mode: "oauth" },
@@ -165,6 +169,9 @@ Save to `~/.openclaw/openclaw.json` and you can DM the bot from that number.
       pruneAfter: "30d",
       maxEntries: 500,
       rotateBytes: "10mb",
+      resetArchiveRetention: "30d", // duration or false
+      maxDiskBytes: "500mb", // optional
+      highWaterBytes: "400mb", // optional (defaults to 80% of maxDiskBytes)
     },
     typingIntervalSeconds: 5,
     sendPolicy: {
@@ -351,6 +358,10 @@ Save to `~/.openclaw/openclaw.json` and you can DM the bot from that number.
     store: "~/.openclaw/cron/cron.json",
     maxConcurrentRuns: 2,
     sessionRetention: "24h",
+    runLog: {
+      maxBytes: "2mb",
+      keepLines: 2000,
+    },
   },
 
   // Webhooks
@@ -359,7 +370,7 @@ Save to `~/.openclaw/openclaw.json` and you can DM the bot from that number.
     path: "/hooks",
     token: "shared-secret",
     presets: ["gmail"],
-    transformsDir: "~/.openclaw/hooks",
+    transformsDir: "~/.openclaw/hooks/transforms",
     mappings: [
       {
         id: "gmail-hook",
@@ -375,7 +386,10 @@ Save to `~/.openclaw/openclaw.json` and you can DM the bot from that number.
         to: "+15555550123",
         thinking: "low",
         timeoutSeconds: 300,
-        transform: { module: "./transforms/gmail.js", export: "transformGmail" },
+        transform: {
+          module: "gmail.js",
+          export: "transformGmail",
+        },
       },
     ],
     gmail: {
