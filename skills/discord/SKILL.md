@@ -195,3 +195,82 @@ Presence (often gated):
 - Short, conversational, low ceremony.
 - No markdown tables.
 - Mention users as `<@USER_ID>`.
+
+---
+
+## Common Workflows
+
+### Create a Channel in a Campaign Category
+
+1. **Find the category ID** — get it from an existing channel in the category:
+```json
+{"action": "channel-info", "channel": "discord", "target": "<existing_channel_id>"}
+```
+The `parent_id` in the response is the category ID.
+
+2. **Create the channel:**
+```json
+{"action": "channel-create", "channel": "discord", "guildId": "1467597829097914627", "name": "my-channel", "topic": "Channel purpose"}
+```
+
+3. **Move it into the category** (channel-create doesn't support parentId directly):
+```json
+{"action": "channel-edit", "channel": "discord", "channelId": "<new_channel_id>", "parentId": "<category_id>"}
+```
+
+4. **Post an initial message:**
+```json
+{"action": "send", "channel": "discord", "target": "channel:<new_channel_id>", "message": "Channel is live. Purpose: ..."}
+```
+
+### Scan a Category for Updates
+
+Read recent messages from all channels in a campaign to understand current state:
+
+1. **List channels** to find all in the category (or use known IDs from CAMPAIGN.md)
+2. **Read each channel:**
+```json
+{"action": "read", "channel": "discord", "target": "channel:<id>", "limit": 10}
+```
+3. Summarize what's happening across channels — look for blockers, decisions, progress.
+
+### Post a Status Update to Multiple Channels
+
+When a DAG node completes or a gate activates, post to both #control and #dag:
+
+```json
+{"action": "send", "channel": "discord", "target": "channel:<control_id>", "message": "..."}
+```
+```json
+{"action": "send", "channel": "discord", "target": "channel:<dag_id>", "message": "..."}
+```
+
+### Create a Category
+
+```json
+{"action": "category-create", "channel": "discord", "guildId": "1467597829097914627", "name": "my-campaign"}
+```
+Returns the category with its ID. Use this ID as `parentId` when creating/moving channels.
+
+### React to Acknowledge
+
+When a user posts something that doesn't need a text reply, react instead:
+```json
+{"action": "react", "channel": "discord", "channelId": "<channel_id>", "messageId": "<msg_id>", "emoji": "✅"}
+```
+
+### Search for Prior Decisions
+
+Find old messages about a topic across channels:
+```json
+{"action": "search", "channel": "discord", "guildId": "1467597829097914627", "query": "decided to use", "channelIds": ["<id1>", "<id2>"], "limit": 10}
+```
+
+## Key IDs (Aibert-Prime)
+
+- **Guild:** `1467597829097914627`
+- **#control:** `1469424689699881053`
+- **Albert:** `172966866195709952`
+- **Travel category:** `1472363807467638845`
+- **Travel #control:** `1472363840825200845`
+- **Travel #dag:** `1476357206160183576`
