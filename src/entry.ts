@@ -80,6 +80,23 @@ if (
 
     attachChildProcessBridge(child);
 
+    // Forward termination/reload signals to the child. Without this, a SIGTERM
+    // from launchd/systemd kills only the parent wrapper, leaving the child
+    // (which holds the gateway port) re-parented to PID 1 — an orphan worker
+    // that blocks subsequent supervised restarts.
+    const FORWARDED_SIGNALS = ["SIGTERM", "SIGINT", "SIGHUP", "SIGUSR1", "SIGUSR2"] as const;
+    for (const sig of FORWARDED_SIGNALS) {
+      process.on(sig, () => {
+        if (!child.killed) {
+          try {
+            child.kill(sig);
+          } catch {
+            // child may already be exiting — best-effort
+          }
+        }
+      });
+    }
+
     child.once("exit", (code, signal) => {
       if (signal) {
         process.exitCode = 1;
